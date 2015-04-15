@@ -22,16 +22,18 @@ for line in f.readlines():
     birthYear = int(data[1])
     endYear = int(data[2])
 
-    for x in range(birthYear, endYear + 1)
+    for x in range(birthYear, endYear + 1):
         for year, peopleAlive in yearWithNumberPeopleAlive.iteritems():
             if x == year:
                 yearWithNumberPeopleAlive[x] = peopleAlive + 1
 
+#Checking for the year with the most people alive
 yearWithMostPeopleAlive = MinBirthEndYear
 for year, peopleAlive in yearWithNumberPeopleAlive.iteritems():
     if yearWithNumberPeopleAlive[yearWithMostPeopleAlive] < peopleAlive:
-        yearWithMostPeopleAlive = yearWithMostPeopleAlive
+        yearWithMostPeopleAlive = year
 
-print "The year with the most people alive is: " + str(yearWithMostPeopleAlive)
+print "The year with the most people alive is " + str(yearWithMostPeopleAlive),
+print "With " + str(yearWithNumberPeopleAlive[yearWithMostPeopleAlive]) + " still living."
 
 f.close()
