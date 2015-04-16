@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        
+        <h1><center>Players</center></h1>
+        <div id="id01"></div>
+        
+        <script>
+            var xmlhttp = new XMLHttpRequest();
+            var url = "http://localhost/~randallmeyer/players_mysql.php";
+            
+            xmlhttp.onreadystatechange=function() {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    myFunction(xmlhttp.responseText);
+                }
+            }
+        xmlhttp.open("GET", url, true);
+        xmlhttp.send();
+        
+        function myFunction(response) {
+            var arr = JSON.parse(response);
+            var i;
+            var out = "<table align=\"center\" width=\"1000\" border=\"1\">";
+            out+="<tr><td align=\"center\">Player ID</td><td align=\"center\">Name</td><td align=\"center\">Credits</td><td align=\"center\">Lifetime Spins</td><td align=\"center\">Lifetime Average Return</td></tr>"
+            
+            for(i = 0; i < arr.length; i++) {
+                out += "<tr><td align=\"center\">" +
+                arr[i].PlayerID +
+                "</td><td align=\"center\">" +
+                arr[i].Name +
+                "</td><td align=\"center\">" +
+                arr[i].Credits +
+                "</td><td align=\"center\">" +
+                arr[i].LifetimeSpins +
+                "</td></tr>";
+            }
+            out += "</table>"
+            document.getElementById("id01").innerHTML = out;
+        }
+        </script>
+        
+    </body>
+</html>

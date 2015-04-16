@@ -1,0 +1,1 @@
+[{"PlayerID":"12345","Name":"Billy Bob","Credits":"5000","LifetimeSpins":"1","SaltValue":"54634"},{"PlayerID":"56789","Name":"Freddy Smith","Credits":"7000","LifetimeSpins":"5","SaltValue":"657890"}]

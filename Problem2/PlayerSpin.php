@@ -25,18 +25,41 @@
             }
         }
     }
-    
-    
-    
     else {
         $sql = "INSERT INTO Player (PlayerID, Name, Credits, LifetimeSpins, SaltValue) VALUES (12345, 'Billy Bob',  5000, 1, 54634)";
         
         if (mysql_query($sql, $link)) {
             echo "New record created successfully";
         } else {
-            echo "Error: " . $sql . "<br>" . mysql_error() . "\n";
+            //echo "Error: " . $sql . "<br>" . mysql_error() . "\n";
+        }
+        
+        $sql = "INSERT INTO Player (PlayerID, Name, Credits, LifetimeSpins, SaltValue) VALUES (56789, 'Freddy Smith',  7000, 5, 657890)";
+        
+        if (mysql_query($sql, $link)) {
+            echo "New record created successfully";
+        } else {
+            //echo "Error: " . $sql . "<br>" . mysql_error() . "\n";
         }
     }
+    
+    
+    #Code for JSON Response
+    $result = mysql_query("SELECT * FROM Player");
+    
+    $json = array();
+    $total_records = mysql_num_rows($result);
+    
+    if($total_records >= 1){
+        while ($row = mysql_fetch_array($result, MYSQL_ASSOC)){
+            $json[] = $row;
+        }
+    }
+    
+    #Creating file for JSON to read from for response html page http://localhost/~randallmeyer/Players.html
+    $fp=fopen('players_mysql.php','w');
+    fwrite($fp, json_encode($json));
+    fclose($fp);
     
     mysql_close($link);
 ?>
