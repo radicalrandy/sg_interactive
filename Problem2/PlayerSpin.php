@@ -64,7 +64,6 @@ function SubmitSpin(clicked)
         }
         
         //Creates fake client data and passes it
-        //Can eventually be made to detect from anywhere
         function SubmitSpin() {
             $randNum = rand(1, 5);
             $playerID = 0;
@@ -251,10 +250,8 @@ function SubmitSpin(clicked)
         }
     }
     
-    
     $playersDatabase = new PlayersDatabase();
     $playersDatabase->CreateDatabaseIfNoneExists();
-    echo "HERE NOW!";
     
     //Called from javascript
     function SubmitSpin()
