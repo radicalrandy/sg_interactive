@@ -32,7 +32,9 @@
                 arr[i].Credits +
                 "</td><td align=\"center\">" +
                 arr[i].LifetimeSpins +
-                "</td></tr>";
+                "</td><td align=\"center\">" +
+                ((arr[i].Credits/5000)*100)  +
+                "%</td></tr>";
             }
             out += "</table>"
             document.getElementById("id01").innerHTML = out;

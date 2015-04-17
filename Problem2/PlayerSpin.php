@@ -26,8 +26,7 @@ function SubmitSpin(clicked)
 <?php
     
     //Class to hold Database info
-    class PlayersDatabase
-    {
+    class PlayersDatabase {
         public $servername = 'localhost';
         public $username = 'root';
         public $password = 'pizza4321';
@@ -36,8 +35,7 @@ function SubmitSpin(clicked)
         function __construct() {}
         
         //Creates Players database if none exists
-        function CreateDatabaseIfNoneExists()
-        {
+        function CreateDatabaseIfNoneExists() {
             $link = mysql_connect($this->servername, $this->username, $this->password);
             
             if (!$link) {
@@ -66,15 +64,14 @@ function SubmitSpin(clicked)
         }
         
         //Creates fake client data and passes it
-        //Can eventually be made to detect from elsewhere
-        function SubmitSpin()
-        {
-            $randNum = 1;//rand(1, 5);
+        //Can eventually be made to detect from anywhere
+        function SubmitSpin() {
+            $randNum = rand(1, 5);
             $playerID = 0;
             $playerName = "";
             $saltValue = "";
-            $coinsWon = rand(1, 5000);
-            $coinsBet = rand(1, 5000);
+            $coinsWon = rand(1, 50);
+            $coinsBet = rand(1, 50);
             
             if($randNum == 1) {
                 $playerID = 12345;
@@ -113,10 +110,9 @@ function SubmitSpin(clicked)
             $passwordHash = password_hash("thiscanbeanything", PASSWORD_BCRYPT, $options);
 
             //Checking the player data and updating if it's valid
-            //$this->UpdateDataIfIsValid($playerID, $coinsWon, $coinsBet, $passwordHash);
+            $this->UpdateDataIfIsValid($playerID, $coinsWon, $coinsBet, $passwordHash);
         }
         
-        //function for clearing everything for testing
         function ClearDatabase() {
             //Connecting to the mysql server
             $link = mysql_connect($this->servername, $this->username, $this->password);
@@ -150,43 +146,76 @@ function SubmitSpin(clicked)
             $result = mysql_query($select, $link);
             
             if(mysql_num_rows($result) > 0){
+                //don't need to add new player since they already exist
             }else{
                 $create = "INSERT INTO Player (PlayerID, Name, Credits, LifetimeSpins, SaltValue) VALUES ($PlayerID, '$PlayerName',  5000, 1, '$SaltValue')";
 
                 if (mysql_query($create)) {
                     echo "New record created successfully";
+                    $this->GenerateJSONResponseData();
                 } else {
                     echo "There was an error when creating new record";
                 }
             }
             
             mysql_close($link);
-            
-            $this->GenerateJSONResponseData();
         }
         
-        function UpdateOrCreateDataIfIsValid($PlayerID, $CoinsWon, $CoinsBet, $Hash) {
+        function UpdateDataIfIsValid($PlayerID, $CoinsWon, $CoinsBet, $ClientHash) {
             
-            /*echo "What!";
+            $passwordHash = "";
             
             //Connecting to the mysql server
             $link = mysql_connect($this->servername, $this->username, $this->password);
             if (!$link) {
                 die('Could not connect: ' . mysql_error());
-            }*/
+            }
             
-            /*//Make Players the current database
-             $db_selected = mysql_select_db($this->dbname, $link);
-             
-             //$sql = "INSERT INTO Player (PlayerID, Name, Credits, LifetimeSpins, SaltValue) VALUES (12345, 'Billy Bob',  5000, 1, 54634)";
-             
-             if (mysql_query($sql, $link)) {
-             echo "New record created successfully";
-             } else {
-             echo "Error: " . $sql . "<br>" . mysql_error() . "\n";
-             }*/
+            //Make Players the current database
+            $db_selected = mysql_select_db($this->dbname, $link);
             
-            //mysql_close($link);
+            $select = "SELECT SaltValue FROM Player where PlayerID = $PlayerID";
+            $result = mysql_query($select, $link);
+            
+            //Generating the hash from what's in the database
+            if(mysql_num_rows($result) > 0) {
+                $saltValue = mysql_result($result, 0);
+                
+                $options = [
+                'cost' => 11,
+                'salt' => $saltValue,
+                ];
+                
+                $passwordHash = password_hash("thiscanbeanything", PASSWORD_BCRYPT, $options);
+            }
+            
+            //Validate with equivalent hashes, 1 generated from salt value, 2nd recieved from the client
+            if(strcmp($passwordHash, $ClientHash) == 0) {
+                //Now we can update the data in the database with our new results
+                $select = "SELECT Credits FROM Player WHERE PlayerID = $PlayerID";
+                $result = mysql_query($select, $link);
+                
+                //Generating the hash from what's in the database
+                if(mysql_num_rows($result) > 0){
+                    $credits = mysql_result($result, 0);
+                    $credits = $credits - $CoinsBet + $CoinsWon;
+                    
+                    //Setting Credits to new value
+                    $update = "UPDATE Player SET Credits = $credits WHERE PlayerID = $PlayerID";
+                    $result = mysql_query($update, $link);
+                    
+                    //Incrementing LifetimeSpins
+                    $update = "UPDATE Player SET LifetimeSpins = LifetimeSpins + 1 WHERE PlayerID = $PlayerID";
+                    $result = mysql_query($update, $link);
+                }
+            }
+            else {
+                echo "Invalid Password Hash";
+            }
+            
+            mysql_close($link);
+            
+            $this->GenerateJSONResponseData();
         }
         
         function GenerateJSONResponseData()
@@ -213,6 +242,7 @@ function SubmitSpin(clicked)
             }
             
             #Creating file for JSON to read from for response html page http://localhost/~randallmeyer/Players.html
+            #The generated JSON php file is located http://localhost/~randallmeyer/players_mysql.php
             $fp=fopen('players_mysql.php','w');
             fwrite($fp, json_encode($json));
             fclose($fp);
@@ -232,115 +262,4 @@ function SubmitSpin(clicked)
         $playersDatabase = new PlayersDatabase();
         $playersDatabase->SubmitSpin();
     }
-    
-    /*#Server database connection info
-    $servername = "localhost";
-    $username = "root";
-    $password = "pizza4321";
-    $dbname = "Players";
-    
-    echo $servername."whats up";
-    
-    //Connecting to the mysql server
-    $link = mysql_connect($servername, $username, $password);
-    if (!$link) {
-        die('Could not connect: ' . mysql_error());
-    }
-    
-    //Make Players the current database
-    $db_selected = mysql_select_db($dbname, $link);
-    
-    //Checking if the database exists, if it doesn't make it
-    if (!$db_selected) {
-        $file_content = file('Players.sql');
-        $query = "";
-        foreach($file_content as $sql_line){
-            if(trim($sql_line) != "" && strpos($sql_line, "--") === false){
-                $query .= $sql_line;
-                if (substr(rtrim($query), -1) == ';'){
-                    echo $query;
-                    $result = mysql_query($query)or die(mysql_error());
-                    $query = "";
-                }
-            }
-        }
-    }
-    else {
-        $sql = "INSERT INTO Player (PlayerID, Name, Credits, LifetimeSpins, SaltValue) VALUES (12345, 'Billy Bob',  5000, 1, 54634)";
-        
-        if (mysql_query($sql, $link)) {
-            echo "New record created successfully";
-        } else {
-            //echo "Error: " . $sql . "<br>" . mysql_error() . "\n";
-        }
-        
-        $sql = "INSERT INTO Player (PlayerID, Name, Credits, LifetimeSpins, SaltValue) VALUES (56789, 'Freddy Smith',  7000, 5, 657890)";
-        
-        if (mysql_query($sql, $link)) {
-            echo "New record created successfully";
-        } else {
-            //echo "Error: " . $sql . "<br>" . mysql_error() . "\n";
-        }
-    }*/
-    
-    /*#Code for JSON Response
-    $result = mysql_query("SELECT * FROM Player");
-    
-    $json = array();
-    $total_records = mysql_num_rows($result);
-    
-    if($total_records >= 1){
-        while ($row = mysql_fetch_array($result, MYSQL_ASSOC)){
-            $json[] = $row;
-        }
-    }
-    
-    #Creating file for JSON to read from for response html page http://localhost/~randallmeyer/Players.html
-    $fp=fopen('players_mysql.php','w');
-    fwrite($fp, json_encode($json));
-    fclose($fp);
-    
-    mysql_close($link);*/
-    
-    //Button Click Recieved from Javascript to fake an incoming client spin
-    /*function SubmitSpin()
-    {
-        #Creating fake users with fake data and selecting 1 randomly from 5
-        #Assuming we got this client data from somewhere
-        $randNum = rand(1, 5);
-        $playerID = "";
-        $saltValue = "";
-        $coinsWon = rand(1, 50);
-        $coinsBet = rand(1, 50);
-        
-        if($randomNum == 1) {
-            $playerID = "12345";
-            $saltValue = "568turjfigkturjfhgod93";
-        }
-        else if($randNum == 2) {
-            $playerID = "54321";
-            $saltValue = "65w934jg924jfi85jgkf93";
-        }
-        else if($randNum == 3) {
-            $playerID = "76543";
-            $saltValue = "58gjtir9406kigjdiej32e";
-        }
-        else if($randNum == 4) {
-            $playerID = "90876";
-            $saltValue = "596jtigorkfie32049igkd";
-        }
-        else if($randNum == 5) {
-            $playerID = "11111";
-            $saltValue = "59tjgkri4320dekrofvgch";
-        }
-
-        $options = [
-            'cost' => 11,
-            'salt' => $saltValue,
-        ];
-        $passwordHash = password_hash("thiscanbeanything", PASSWORD_BCRYPT, $options);
-        
-        //Checking the player data and updating if it's valid
-        UpdateOrCreateDataIfIsValid($PlayerID, $CoinsWon, $CoinsBet, $passwordHash);
-    }*/
 ?>
